@@ -22,6 +22,8 @@
 
 #include "tinsel/graphics.h"
 #include "tinsel/handle.h"	// LockMem()
+#include "tinsel/hd_renderer.h"
+#include "tinsel/bmv.h"
 #include "tinsel/object.h"
 #include "tinsel/palette.h"
 #include "tinsel/psx_japan_font.h"
@@ -1097,6 +1099,10 @@ void ClearScreen() {
  * Updates the screen surface within the following rectangle
  */
 void UpdateScreenRect(const Common::Rect &pClip) {
+	if (_vm->hdRenderer()) {
+		_vm->hdRenderer()->present(pClip, _vm->_bmv && _vm->_bmv->MoviePlaying());
+		return;
+	}
 	int yOffset = (TinselVersion >= 2) ? (g_system->getHeight() - SCREEN_HEIGHT) / 2 : 0;
 	byte *pSrc = (byte *)_vm->screen().getBasePtr(pClip.left, pClip.top);
 	g_system->copyRectToScreen(pSrc, _vm->screen().pitch, pClip.left, pClip.top + yOffset,
@@ -1107,6 +1113,7 @@ void UpdateScreenRect(const Common::Rect &pClip) {
  * Draws the specified object onto the screen surface buffer
  */
 void DrawObject(DRAWOBJECT *pObj) {
+	HDRenderer::DrawSnapshot hdSnapshot;
 	uint8 *srcPtr = nullptr;
 	uint8 *destPtr;
 	byte psxMapperTable[16];
@@ -1119,6 +1126,8 @@ void DrawObject(DRAWOBJECT *pObj) {
 	if ((pObj->width <= 0) || (pObj->height <= 0))
 		// Empty image, so return immediately
 		return;
+	if (_vm->hdRenderer())
+		_vm->hdRenderer()->capture(*pObj, hdSnapshot);
 
 	// If writing constant data, don't bother locking the data pointer and reading src details
 	if (((pObj->flags & DMA_CONST) == 0 && !psxJapanFontChar) || ((TinselVersion == 3) && ((pObj->flags & 0x05) == 0x05))) {
@@ -1274,6 +1283,8 @@ void DrawObject(DRAWOBJECT *pObj) {
 	// for decompressed block indexes.
 	if ((TinselV1PSX || TinselV1Saturn) && psxSaturnRLEindex)
 		free(srcPtr);
+	if (_vm->hdRenderer())
+		_vm->hdRenderer()->finish(hdSnapshot);
 }
 
 } // End of namespace Tinsel

@@ -68,6 +68,7 @@ class Dialogs;
 class Notebook;
 class SystemReel;
 class Spriter;
+class HDRenderer;
 
 typedef Common::List<Common::Rect> RectList;
 
@@ -212,6 +213,9 @@ public:
 	Notebook *_notebook = nullptr;
 	SystemReel *_systemReel = nullptr;
 	Spriter *_spriter = nullptr;
+	HDRenderer *_hdRenderer = nullptr;
+	bool _hdEnabled = false;
+	HDRenderer *hdRenderer() const { return _hdRenderer; }
 	bool _memoryManagerInitialized;
 
 	KEYFPTR _keyHandler;

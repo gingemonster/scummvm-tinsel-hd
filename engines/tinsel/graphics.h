@@ -46,6 +46,7 @@ struct DRAWOBJECT {
 	int width;		// width of object
 	int height;		// height of object
 	SCNHANDLE hBits;	// image bitmap handle
+	SCNHANDLE hImg;	// image definition handle, used by optional HD art
 	int lineoffset;		// offset to next line
 	int leftClip;		// amount to clip off object left
 	int rightClip;		// amount to clip off object right

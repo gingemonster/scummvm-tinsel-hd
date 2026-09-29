@@ -30,6 +30,7 @@
 #include "tinsel/pid.h"	// process identifiers
 #include "tinsel/tinsel.h"
 #include "tinsel/noir/spriter.h"
+#include "tinsel/hd_renderer.h"
 
 namespace Tinsel {
 
@@ -256,6 +257,8 @@ void Background::DrawBackgnd() {
 		}
 	} else {
 		for (RectList::const_iterator r = clipRects.begin(); r != clipRects.end(); ++r) {
+			if (_vm->hdRenderer())
+				_vm->hdRenderer()->clearRect(*r);
 			// clear the clip rectangle on the virtual screen
 			// for each background playfield
 			for (unsigned int i = 0; i < _pCurBgnd->fieldArray.size(); i++) {
@@ -281,9 +284,11 @@ void Background::DrawBackgnd() {
 	}
 
 	// update the screen within the clipping rectangles
-	for (RectList::const_iterator r = clipRects.begin(); r != clipRects.end(); ++r) {
-		UpdateScreenRect(*r);
-	}
+	if (_vm->hdRenderer())
+		UpdateScreenRect(Common::Rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT));
+	else
+		for (RectList::const_iterator r = clipRects.begin(); r != clipRects.end(); ++r)
+			UpdateScreenRect(*r);
 
 	g_system->updateScreen();
 

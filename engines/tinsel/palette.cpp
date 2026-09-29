@@ -24,6 +24,7 @@
 #include "tinsel/graphics.h"
 #include "tinsel/handle.h"	// LockMem definition
 #include "tinsel/palette.h"	// palette allocator structures etc.
+#include "tinsel/hd_renderer.h"
 #include "tinsel/sysvar.h"
 #include "tinsel/tinsel.h"
 
@@ -213,7 +214,10 @@ void PalettesToVideoDAC() {
 		}
 
 		// update the system palette
-		g_system->getPaletteManager()->setPalette(pal, pDACtail->destDACindex, pDACtail->numColors);
+		if (_vm->hdRenderer())
+			_vm->hdRenderer()->setPalette(pal, pDACtail->destDACindex, pDACtail->numColors);
+		else
+			g_system->getPaletteManager()->setPalette(pal, pDACtail->destDACindex, pDACtail->numColors);
 
 		// update tail pointer
 		pDACtail++;

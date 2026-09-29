@@ -50,6 +50,7 @@
 #include "tinsel/film.h"
 #include "tinsel/font.h"
 #include "tinsel/handle.h"
+#include "tinsel/hd_renderer.h"
 #include "tinsel/heapmem.h"			// MemoryInit
 #include "tinsel/dialogs.h"
 #include "tinsel/mareels.h"
@@ -943,6 +944,7 @@ TinselEngine::TinselEngine(OSystem *syst, const TinselGameDescription *gameDesc)
 TinselEngine::~TinselEngine() {
 	_system->getAudioCDManager()->stop();
 	delete _spriter;
+	delete _hdRenderer;
 	delete _systemReel;
 	delete _notebook;
 	delete _cursor;
@@ -1003,6 +1005,11 @@ Common::String TinselEngine::getSavegameFilename(int16 saveNum) const {
 }
 
 void TinselEngine::initializePath(const Common::FSNode &gamePath) {
+	// The add-on is local to this installation and is never required by the
+	// original game. PNG support is optional in ScummVM builds.
+#ifdef USE_PNG
+	_hdEnabled = getGameID() == GID_DW2 && gamePath.getChild("hd").isDirectory();
+#endif
 	if (TinselV1PSX) {
 		// Add subfolders needed for PSX versions of Discworld 1
 		SearchMan.addDirectory(gamePath, 0, 3, true);
@@ -1061,7 +1068,11 @@ Common::Error TinselEngine::run() {
 		return Common::Error(Common::kUnsupportedGameidError, _s("Discworld Noir needs ScummVM with TinyGL enabled"));
 #endif
 	} else if (getGameID() == GID_DW2) {
-		if (ConfMan.getBool("crop_black_bars"))
+		if (_hdEnabled) {
+			const Graphics::PixelFormat hdFormat = Graphics::PixelFormat::createFormatRGBA32(false);
+			initGraphics(1280, ConfMan.getBool("crop_black_bars") ? 864 : 960, &hdFormat);
+			_hdRenderer = new HDRenderer();
+		} else if (ConfMan.getBool("crop_black_bars"))
 			initGraphics(640, 432);
 		else
 			initGraphics(640, 480);
@@ -1233,7 +1244,11 @@ bool TinselEngine::pollEvent() {
 			int ySkip = 0;
 			if (TinselVersion >= 2)
 				ySkip = (g_system->getHeight() - _vm->screen().h) / 2;
-			if ((event.mouse.y >= ySkip) && (event.mouse.y < (g_system->getHeight() - ySkip)))
+			if (_hdRenderer) {
+				ySkip = (g_system->getHeight() - _vm->screen().h * 2) / 2;
+				if ((event.mouse.y >= ySkip) && (event.mouse.y < g_system->getHeight() - ySkip))
+					_mousePos = Common::Point(event.mouse.x / 2, (event.mouse.y - ySkip) / 2);
+			} else if ((event.mouse.y >= ySkip) && (event.mouse.y < (g_system->getHeight() - ySkip)))
 				_mousePos = Common::Point(event.mouse.x, event.mouse.y - ySkip);
 		}
 		break;

@@ -302,6 +302,7 @@ void UpdateClipRectSingle(OBJECT *pObj, Common::Point *pWin, Common::Rect *pClip
 	}
 	currentObj.constant       = pObj->constant;
 	currentObj.hBits          = pObj->hBits;
+	currentObj.hImg           = pObj->hImg;
 
 	// draw the object
 	DrawObject(&currentObj);
